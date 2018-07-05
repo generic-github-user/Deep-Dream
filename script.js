@@ -40,16 +40,28 @@ canvas.output.height = imageSize;
 // Define encoder network layers
 const classifier = {
 	// Input layer with the same number of units as the volume of the input image
-	input: tf.input({shape: imageVolume}),
+	"input": tf.input({shape: imageVolume}),
 	// Hidden layers
-	hidden: [
+	"hidden": [
 		// First hidden layer - dense layer with 500 units and a relu activation function
 		tf.layers.dense({units: 500, activation: "relu"}),
 		// Second hidden layer - dense layer with 300 units and a relu activation function
 		tf.layers.dense({units: 300, activation: "relu"}),
 		// Third hidden layer - dense layer with 100 units and a relu activation function
 		tf.layers.dense({units: 100, activation: "relu"})
-	]
+	],
+	// Wrap loss calculation function in a tf.tidy so that intermediate tensors are disposed of when the calculation is finished
+	"calculateLoss": () => tf.tidy(
+		// Calculate loss
+		() => {
+			// Evaluate the loss function given the output of the autoencoder network and the actual image
+			return loss(
+				// Pass the input data through the autoencoder
+				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
+				trainingData.tensor.output
+			);
+		}
+	)
 };
 // Define data flow through encoder model layers
 // Output layer is a dense layer with 5 units that is calculated by applying the third ([2]) hidden layer
@@ -126,20 +138,6 @@ const learningRate = 0.001;
 // Optimization function for training neural networks
 optimizer = tf.train.adam(learningRate);
 
-// Loss calculation function for classification neural network
-const calculateLoss =
-// Wrap loss calculation function in a tf.tidy so that intermediate tensors are disposed of when the calculation is finished
-() => tf.tidy(
-	// Calculate loss
-	() => {
-		// Evaluate the loss function given the output of the autoencoder network and the actual image
-		return loss(
-			// Pass the input data through the autoencoder
-			classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
-			trainingData.tensor.output
-		);
-	}
-);
 
 // Create object to store training data in image, pixel, and tensor format
 const trainingData = {
@@ -222,19 +220,21 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		// Use tidy here
 		// Print current neural network loss to console
 		// Calculate loss value and store it in a constant
-		const printLoss = calculateLoss();
+		const printLoss = classifier.calculateLoss();
 		// Print loss to console
 		printLoss.print();
 		// Dispose of loss value
 		printLoss.dispose();
 
 		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
-		optimizer.minimize(calculateLoss);
+		optimizer.minimize(classifier.calculateLoss);
 	}
 	console.log("End classifier network training");
 
 	// Define training function for class-matching neural network - this will be executed iteratively
 	function train() {
+
+
 		// All this is just display code
 		// Calculate autoencoder output from original image
 		const output =
