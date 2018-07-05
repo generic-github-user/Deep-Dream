@@ -56,7 +56,6 @@ const classifier = {
 		() => {
 			// Evaluate the loss function given the output of the autoencoder network and the actual image
 			return loss(
-				// Pass the input data through the autoencoder
 				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
 				trainingData.tensor.output
 			);
@@ -84,16 +83,27 @@ classifier.output = tf.layers.dense({units: 2}).apply(
 // Define decoder network layers
 const dreamer = {
 	// Input layer with the same number of units as the output of the encoder network (the number of latent variables)
-	input: tf.input({shape: imageVolume}),
+	"input": tf.input({shape: imageVolume}),
 	// Hidden layers
-	hidden: [
+	"hidden": [
 		// First hidden layer - dense layer with 100 units and a relu activation function
 		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"}),
 		// Second hidden layer - dense layer with 300 units and a relu activation function
 		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"}),
 		// Third hidden layer - dense layer with 500 units and a relu activation function
 		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"})
-	]
+	],
+	// Wrap loss calculation function in a tf.tidy so that intermediate tensors are disposed of when the calculation is finished
+	"calculateLoss": () => tf.tidy(
+		// Calculate loss
+		() => {
+			// Evaluate the loss function given the output of the autoencoder network and the actual image
+			return loss(
+				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
+				tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1)
+			);
+		}
+	)
 };
 // Define data flow through decoder model layers
 // Output layer is a dense layer with the same number of units as the input image/data that is calculated by applying the third ([2]) hidden layer
