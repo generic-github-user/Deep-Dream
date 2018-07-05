@@ -132,30 +132,22 @@ const calculateLoss =
 () => tf.tidy(
 	// Calculate loss
 	() => {
-		return tf.add(
-			// Evaluate the loss function given the output of the autoencoder network and the actual image
-			loss(
-				// Pass the input data through the autoencoder
-				decoder.model.predict(encoder.model.predict(trainingData.tensor.input.mul(pixelMul))),
-				trainingData.tensor.input
-			),
-			// Evaluate the divergence of the network from a normal distribution (KL divergence)
-			loss(
-				// Create a latent representation of the input data with the encoder network
-				encoder.model.predict(trainingData.tensor.input.mul(pixelMul)),
-				// Generate a tensor of random normal values
-				tf.randomNormal([5])
-			)
+		// Evaluate the loss function given the output of the autoencoder network and the actual image
+		return loss(
+			// Pass the input data through the autoencoder
+			classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
+			trainingData.tensor.output
 		);
 	}
 );
 
 // Create object to store training data in image, pixel, and tensor format
 const trainingData = {
-	// Store training data image elements
+	// Store training data as HTML image elements
 	"images": [],
 	// Store training data as raw arrays of pixel data
 	"pixels": [],
+	// Store training data as a TensorFlow.js tensor
 	"tensor": {}
 }
 // Add training data to trainingData.images array as an HTML image element
@@ -189,7 +181,9 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	}
 	// Create a tensor from the pixel values of the training data and store it in trainingData.tensor.input
 	trainingData.tensor.input = tf.tensor(trainingData.pixels);
-	trainingData.tensor.output = tf.oneHot(tf.tensor1d([0, 1], "int32"), 2, 1, -1);
+
+	trainingData.tensor.output = tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1);
+	trainingData.tensor.output.dtype = "float32";
 
 	// Pick a random image from the training data to test the network on
 	var index = Math.floor(Math.random() * trainingData.pixels.length);
