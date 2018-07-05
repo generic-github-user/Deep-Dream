@@ -2,7 +2,7 @@
 
 // Define settings
 // Size of input and output images in pixels (width and height)
-const imageSize = 32;
+const imageSize = 50;
 // Number of images to use when training the neural network
 const numTrainingImages = 20;
 // Number of images to use when testing the neural network
@@ -146,9 +146,9 @@ dreamer.model = tf.model(
 // Define loss function for neural network training: Mean squared error
 loss = (input, output) => input.sub(output).square().mean();
 // Learning rate for optimization algorithm
-const learningRate = 0.001;
+const learningRate = 0.00001;
 // Optimization function for training neural networks
-optimizer = tf.train.adam(learningRate);
+optimizer = tf.train.sgd(learningRate);
 
 // Create object to store training data in image, pixel, and tensor format
 const trainingData = {
@@ -187,7 +187,7 @@ for (var i = 0; i < numImages[i]; i ++) {
 	}
 }
 
-// Wait for images (testing data) to load before continuing
+// Wait for last image (testing data) to load before continuing
 testingData.images[testingData.images.length - 1].onload = function () {
 	// Create training data from pixels of image elements
 	// Create a new variable to store the data
