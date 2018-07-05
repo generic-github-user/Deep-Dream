@@ -201,27 +201,6 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	// Display input image on the input canvas, then dispose of the input tensor
 	tf.toPixels(input, canvas.input).then(() => input.dispose());
 
-	// Function for limiting the pixel values of output images to a 0 - 255 range (outdated, replaced with clipByValue)
-	function limitPixels(pixels) {
-		// Get pixel values as an array from input tensor
-		var values = pixels.dataSync();
-		// Loop through each value
-		for (var i = 0; i < values.length; i ++) {
-			// Check if value is less than 0
-			if (values[i] < 0) {
-				// Set the value to 0
-				values[i] = 0;
-			}
-			// Check if value is greater than 255
-			else if (values[i] > 255) {
-				// Set the value to 255
-				values[i] = 255;
-			}
-		}
-		// Return the data as an image-formatted tensor with dtype of "int32"
-		return tf.tensor(values, [imageSize, imageSize, 3], "int32");
-	}
-
 	function printLoss(model) {
 		// Print TensorFlow.js memory information to console, including the number of tensors stored in memory (for debugging purposes)
 		console.log(tf.memory());
@@ -237,9 +216,9 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 
 	console.log("Begin classifier network training");
 	for (var i = 0; i < 10; i ++) {
+		printLoss(classifier);
 		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
 		optimizer.minimize(classifier.calculateLoss);
-		printLoss(classifier);
 	}
 	console.log("End classifier network training");
 
