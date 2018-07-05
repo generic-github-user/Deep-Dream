@@ -12,8 +12,6 @@ const classTargets = tf.oneHot(tf.tensor1d(tf.ones([20]).dataSync(), "int32"), 2
 // Automatically generated settings and parameters
 // Volume of image data, calculated by squaring imageSize to find the area of the image (total number of pixels) and multiplying by three for each color channel (RGB)
 const imageVolume = (imageSize ** 2) * 3;
-// Value to multiply pixels by to scale values from 0 - 255 to 0 - 1
-const pixelMul = tf.scalar(1 / 255);
 classTargets.dtype = "float32";
 
 // Get information for main canvas elements
@@ -60,7 +58,7 @@ const classifier = {
 		() => {
 			// Evaluate the loss function given the output of the autoencoder network and the actual image
 			return loss(
-				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
+				classifier.model.predict(trainingData.tensor.input),
 				trainingData.tensor.output
 			);
 		}
@@ -103,7 +101,7 @@ const dreamer = {
 		() => {
 			// Evaluate the loss function given the output of the autoencoder network and the actual image
 			return loss(
-				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
+				classifier.model.predict(trainingData.tensor.input),
 				classTargets
 			);
 		}
@@ -278,19 +276,16 @@ testingData.images[testingData.images.length - 1].onload = function () {
 					tf.tensor(
 						[trainingData.pixels[index]]
 					)
-					// Multiply the input data tensor by the pixel coefficient
-					.mul(pixelMul)
 				)
-				// Reduce output values from ~ 0 - 255 to ~ 0 - 1
-				// .mul(pixelMul)
-				// Clip pixel values to a 0 - 1 (float32) range
-				.clipByValue(0, 1)
+				// Clip pixel values to a 0 - 255 (int32) range
+				.clipByValue(0, 255)
 				// Reshape the output tensor into an image format (W * L * 3)
 				.reshape(
 					[imageSize, imageSize, 3]
 				)
 			}
 		);
+		output.dtype = "int32";
 
 		// Display the output tensor on the output canvas, then dispose the tensor
 		tf.toPixels(output, canvas.output).then(() => output.dispose());
