@@ -5,8 +5,6 @@
 const imageSize = 16;
 // Number of images to use when training the neural network
 const numTrainingImages = 46;
-// Number of thumbnail canvases to display randomly generated images on
-const numCanvases = 2;
 
 // Automatically generated settings and parameters
 // Volume of image data, calculated by squaring imageSize to find the area of the image (total number of pixels) and multiplying by three for each color channel (RGB)
@@ -205,7 +203,7 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	const input = tf.tensor(trainingData.pixels[index], [imageSize, imageSize, 3]);
 	// Set input image tensor dtype to "int32"
 	input.dtype = "int32";
-	// Display input imageon the input canvas, then dispose of the input tensor
+	// Display input image on the input canvas, then dispose of the input tensor
 	tf.toPixels(input, canvas.input).then(() => input.dispose());
 
 	// Function for limiting the pixel values of output images to a 0 - 255 range (outdated, replaced with clipByValue)
@@ -227,35 +225,6 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		}
 		// Return the data as an image-formatted tensor with dtype of "int32"
 		return tf.tensor(values, [imageSize, imageSize, 3], "int32");
-	}
-
-	// Create thumbnail canvases to render randomly generated images
-	// Create array to store thumbnail canvas elements
-	const canvases = [];
-	// Calculate minumum value of latent variables - this will be used to generate latent variables for new images
-	const min = encoder.model.predict(trainingData.tensor).min().dataSync()[0];
-	// Calculate maximum value of latent variables
-	const max = encoder.model.predict(trainingData.tensor).max().dataSync()[0];
-	// Create a specified number of new canvases
-	for (var i = 0; i < numCanvases; i ++) {
-		// Create a new HTML canvas element
-		var element = document.createElement("canvas");
-		// Add a corresponding id property to the canvas element
-		element.id = "canvas-" + i;
-		// Set the "thumbnail" CSS class for the new canvas
-		element.className = "thumbnail";
-		// Add the canvas element to the page body
-		document.body.appendChild(element);
-		// Add this canvas element to the canvases array
-		canvases.push({
-			// Select the canvas element by id and add it to the array
-			"canvas": document.getElementById("canvas-" + i),
-			// Add randomly generated latent space variables for this canvas
-			// "variables": tf.randomNormal([1, 5])
-			"variables": tf.randomUniform([1, 5], min, max)
-		});
-		// Add rendering context object for the canvas
-		canvases[i].context = canvases[i].canvas.getContext("2d");
 	}
 
 	// Define training function for variational autoencoder neural network - this will be executed iteratively
@@ -305,30 +274,6 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 
 		// Display the output tensor on the output canvas, then dispose the tensor
 		tf.toPixels(output, canvas.output).then(() => output.dispose());
-
-		// Display randomly generated images on thumbnail canvases
-		// Loop through each canvas
-		for (var i = 0; i < canvases.length; i ++) {
-			// Calculate decoder output from randomly generated latent variables
-			const output_ =
-			// Wrap output calculation in a tf.tidy() to remove intermediate tensors after the calculation is complete
-			tf.tidy(
-				() => {
-					// Generate output given randomly generated latent variables
-					return decoder.model.predict(canvases[i].variables)
-					// Reduce output values from ~ 0 - 255 to ~ 0 - 1
-					.mul(pixelMul)
-					// Clip pixel values to a 0 - 1 (float32) range
-					.clipByValue(0, 1)
-					// Reshape the output tensor into an image format (W * L * 3)
-					.reshape(
-						[imageSize, imageSize, 3]
-					);
-				}
-			);
-			// Display the output tensor on the output canvas, then dispose the tensor
-			tf.toPixels(output_, canvases[i].canvas).then(() => output_.dispose());
-		}
 	}
 	// Set an interval of 100 milliseconds to repeat the train() function
 	var interval = window.setInterval(train, 100);
