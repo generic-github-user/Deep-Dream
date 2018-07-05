@@ -18,8 +18,6 @@ const canvas = {
 	"input": document.getElementById("inputCanvas"),
 	// Get information for output canvas to display autoencoded representation of the original input image
 	"output": document.getElementById("outputCanvas"),
-	// Get information for "reconstruction" canvas that displays the output from a user-defined set of latent-space variables
-	"reconstruction": document.getElementById("reconstructionCanvas")
 }
 // Get context for main canvas elements
 const context = {
@@ -27,8 +25,6 @@ const context = {
 	"input": canvas.input.getContext("2d"),
 	// Get context for output canvas
 	"output": canvas.output.getContext("2d"),
-	// Get context for reconstruction canvas
-	"reconstruction": canvas.reconstruction.getContext("2d")
 }
 
 // Set canvas dimensions to match specified image dimensions
@@ -38,9 +34,6 @@ canvas.input.height = imageSize;
 // Output canvas
 canvas.output.width = imageSize;
 canvas.output.height = imageSize;
-// Reconstruction canvas
-canvas.reconstruction.width = imageSize;
-canvas.reconstruction.height = imageSize;
 
 // Define encoder network with the high-level TensorFlow.js layers system
 // This network takes a high-dimensional input image and reduces it to a low-dimensional "latent-space" representation
