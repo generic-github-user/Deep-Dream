@@ -1,6 +1,6 @@
-// Main JavaScript for TensorFlow.js Variational Autoencoder
+// Main JavaScript for TensorFlow.js Deep Dream
 
-// Define settings for variational autoencoder
+// Define settings
 // Size of input and output images in pixels (width and height)
 const imageSize = 16;
 // Number of images to use when training the neural network
@@ -126,7 +126,7 @@ const learningRate = 0.001;
 // Optimization function for training neural networks
 optimizer = tf.train.adam(learningRate);
 
-// Loss calculation function for variational autoencoder neural network
+// Loss calculation function for classification neural network
 const calculateLoss =
 // Wrap loss calculation function in a tf.tidy so that intermediate tensors are disposed of when the calculation is finished
 () => tf.tidy(
@@ -220,7 +220,7 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		return tf.tensor(values, [imageSize, imageSize, 3], "int32");
 	}
 
-	// Define training function for variational autoencoder neural network - this will be executed iteratively
+	// Define training function for class-matching neural network - this will be executed iteratively
 	function train() {
 		// Print TensorFlow.js memory information to console, including the number of tensors stored in memory (for debugging purposes)
 		console.log(tf.memory());
