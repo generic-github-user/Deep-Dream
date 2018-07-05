@@ -2,7 +2,7 @@
 
 // Define settings
 // Size of input and output images in pixels (width and height)
-const imageSize = 32;
+const imageSize = 16;
 // Number of images to use when training the neural network
 const numTrainingImages = 10;
 
@@ -38,7 +38,7 @@ canvas.output.height = imageSize;
 // Define encoder network with the high-level TensorFlow.js layers system
 // This network takes a high-dimensional input image and reduces it to a low-dimensional "latent-space" representation
 // Define encoder network layers
-const encoder = {
+const classifier = {
 	// Input layer with the same number of units as the volume of the input image
 	input: tf.input({shape: imageVolume}),
 	// Hidden layers
@@ -53,15 +53,15 @@ const encoder = {
 };
 // Define data flow through encoder model layers
 // Output layer is a dense layer with 5 units that is calculated by applying the third ([2]) hidden layer
-encoder.output = tf.layers.dense({units: 5}).apply(
+classifier.output = tf.layers.dense({units: 2}).apply(
 	// Third hidden layer is calculated by applying the second ([1]) hidden layer
-	encoder.hidden[2].apply(
+	classifier.hidden[2].apply(
 		// Third hidden layer is calculated by applying the first ([0]) hidden layer
-		encoder.hidden[1].apply(
+		classifier.hidden[1].apply(
 			// First hidden layer is calculated by applying the input
-			encoder.hidden[0].apply(
+			classifier.hidden[0].apply(
 				// Encoder network input
-				encoder.input
+				classifier.input
 			)
 		)
 	)
@@ -70,51 +70,51 @@ encoder.output = tf.layers.dense({units: 5}).apply(
 // Define decoder network
 // This network takes a low-dimensional "latent-space" representation of the input image (created by the encoder network) and creates a high-dimensional output image (meant to match the original input image)
 // Define decoder network layers
-const decoder = {
+const dreamer = {
 	// Input layer with the same number of units as the output of the encoder network (the number of latent variables)
-	input: tf.input({shape: 5}),
+	input: tf.input({shape: imageVolume}),
 	// Hidden layers
 	hidden: [
 		// First hidden layer - dense layer with 100 units and a relu activation function
-		tf.layers.dense({units: 100, activation: "relu"}),
+		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"}),
 		// Second hidden layer - dense layer with 300 units and a relu activation function
-		tf.layers.dense({units: 300, activation: "relu"}),
+		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"}),
 		// Third hidden layer - dense layer with 500 units and a relu activation function
-		tf.layers.dense({units: 500, activation: "relu"})
+		tf.layers.dense({units: Math.round(imageVolume / 2), activation: "relu"})
 	]
 };
 // Define data flow through decoder model layers
 // Output layer is a dense layer with the same number of units as the input image/data that is calculated by applying the third ([2]) hidden layer
-decoder.output = tf.layers.dense({units: imageVolume}).apply(
+dreamer.output = tf.layers.dense({units: imageVolume}).apply(
 	// Third hidden layer is calculated by applying the second ([1]) hidden layer
-	decoder.hidden[2].apply(
+	dreamer.hidden[2].apply(
 		// Third hidden layer is calculated by applying the first ([0]) hidden layer
-		decoder.hidden[1].apply(
+		dreamer.hidden[1].apply(
 			// First hidden layer is calculated by applying the input
-			decoder.hidden[0].apply(
+			dreamer.hidden[0].apply(
 				// Decoder network input
-				decoder.input
+				dreamer.input
 			)
 		)
 	)
 );
 
 // Create a new TensorFlow.js model to act as the encoder network in the autoencoder
-encoder.model = tf.model(
+classifier.model = tf.model(
 	{
 		// Set inputs to predefined encoder network input layer
-		inputs: encoder.input,
+		"inputs": classifier.input,
 		// Set outputs to predefined encoder network outputs layer
-		outputs: encoder.output
+		"outputs": classifier.output
 	}
 );
 // Create a new model to act as the decoder network in the autoencoder
-decoder.model = tf.model(
+dreamer.model = tf.model(
 	{
 		// Set inputs to predefined decoder network input layer
-		inputs: decoder.input,
+		"inputs": dreamer.input,
 		// Set outputs to predefined decoder network outputs layer
-		outputs: decoder.output
+		"outputs": dreamer.output
 	}
 );
 
