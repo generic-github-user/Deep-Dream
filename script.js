@@ -5,12 +5,14 @@
 const imageSize = 16;
 // Number of images to use when training the neural network
 const numTrainingImages = 10;
+const classTargets = tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1);
 
 // Automatically generated settings and parameters
 // Volume of image data, calculated by squaring imageSize to find the area of the image (total number of pixels) and multiplying by three for each color channel (RGB)
 const imageVolume = (imageSize ** 2) * 3;
 // Value to multiply pixels by to scale values from 0 - 255 to 0 - 1
 const pixelMul = tf.scalar(1 / 255);
+classTargets.dtype = "float32";
 
 // Get information for main canvas elements
 const canvas = {
@@ -100,7 +102,7 @@ const dreamer = {
 			// Evaluate the loss function given the output of the autoencoder network and the actual image
 			return loss(
 				classifier.model.predict(trainingData.tensor.input.mul(pixelMul)),
-				tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1)
+				classTargets
 			);
 		}
 	)
@@ -224,6 +226,10 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 
 	// Define training function for class-matching neural network - this will be executed iteratively
 	function train() {
+		printLoss(dreamer);
+		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
+		optimizer.minimize(dreamer.calculateLoss);
+
 		// All this is just display code
 		// Calculate autoencoder output from original image
 		const output =
