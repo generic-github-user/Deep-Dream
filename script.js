@@ -2,9 +2,9 @@
 
 // Define settings
 // Size of input and output images in pixels (width and height)
-const imageSize = 16;
+const imageSize = 32;
 // Number of images to use when training the neural network
-const numTrainingImages = 46;
+const numTrainingImages = 10;
 
 // Automatically generated settings and parameters
 // Volume of image data, calculated by squaring imageSize to find the area of the image (total number of pixels) and multiplying by three for each color channel (RGB)
@@ -17,14 +17,14 @@ const canvas = {
 	// Get information for input canvas to display randomly selected input image for the autoencoder
 	"input": document.getElementById("inputCanvas"),
 	// Get information for output canvas to display autoencoded representation of the original input image
-	"output": document.getElementById("outputCanvas"),
+	"output": document.getElementById("outputCanvas")
 }
 // Get context for main canvas elements
 const context = {
 	// Get context for input canvas
 	"input": canvas.input.getContext("2d"),
 	// Get context for output canvas
-	"output": canvas.output.getContext("2d"),
+	"output": canvas.output.getContext("2d")
 }
 
 // Set canvas dimensions to match specified image dimensions
@@ -136,13 +136,13 @@ const calculateLoss =
 			// Evaluate the loss function given the output of the autoencoder network and the actual image
 			loss(
 				// Pass the input data through the autoencoder
-				decoder.model.predict(encoder.model.predict(trainingData.tensor.mul(pixelMul))),
-				trainingData.tensor
+				decoder.model.predict(encoder.model.predict(trainingData.tensor.input.mul(pixelMul))),
+				trainingData.tensor.input
 			),
 			// Evaluate the divergence of the network from a normal distribution (KL divergence)
 			loss(
 				// Create a latent representation of the input data with the encoder network
-				encoder.model.predict(trainingData.tensor.mul(pixelMul)),
+				encoder.model.predict(trainingData.tensor.input.mul(pixelMul)),
 				// Generate a tensor of random normal values
 				tf.randomNormal([5])
 			)
@@ -155,7 +155,8 @@ const trainingData = {
 	// Store training data image elements
 	"images": [],
 	// Store training data as raw arrays of pixel data
-	"pixels": []
+	"pixels": [],
+	"tensor": {}
 }
 // Add training data to trainingData.images array as an HTML image element
 // Loop through each training image
@@ -186,12 +187,12 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 			(element) => trainingData.pixels[i].push(element)
 		);
 	}
-	// Create a tensor from the pixel values of the training data and store it in trainingData.tensor
-	trainingData.tensor = tf.tensor(trainingData.pixels);
+	// Create a tensor from the pixel values of the training data and store it in trainingData.tensor.input
+	trainingData.tensor.input = tf.tensor(trainingData.pixels);
+	trainingData.tensor.output = tf.oneHot(tf.tensor1d([0, 1], "int32"), 2, 1, -1);
 
 	// Pick a random image from the training data to test the network on
 	var index = Math.floor(Math.random() * trainingData.pixels.length);
-
 	// Create image tensor from input image pixel data
 	const input = tf.tensor(trainingData.pixels[index], [imageSize, imageSize, 3]);
 	// Set input image tensor dtype to "int32"
@@ -275,5 +276,5 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 // Loop through each image element
 for (var i = 0; i < numTrainingImages; i ++) {
 	// Set the corresponding source for the image
-	trainingData.images[i].src = "./training-data/characters/" + (i + 1) + ".png";
+	trainingData.images[i].src = "./training-data/fireworks/" + (i + 1) + ".jpg";
 }
