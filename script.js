@@ -5,6 +5,8 @@
 const imageSize = 16;
 // Number of images to use when training the neural network
 const numTrainingImages = 20;
+// Number of images to use when testing the neural network
+const numTestingImages = 5;
 const classTargets = tf.oneHot(tf.tensor1d(tf.ones([20]).dataSync(), "int32"), 2, 1, -1);
 
 // Automatically generated settings and parameters
@@ -159,37 +161,63 @@ const trainingData = {
 	// Store training data as a TensorFlow.js tensor
 	"tensor": {}
 }
-// Add training data to trainingData.images array as an HTML image element
-// Loop through each training image
-for (var i = 0; i < numTrainingImages; i ++) {
-	// Create a new HTML image element with the specified dimensions and set current array index to this element (array.push does not work here)
-	trainingData.images[i] = new Image(imageSize, imageSize);
+const testingData = {
+	// Store testing data as HTML image elements
+	"images": [],
+	// Store testing data as raw arrays of pixel data
+	"pixels": [],
+	// Store testing data as a TensorFlow.js tensor
+	"tensor": {}
 }
 
-// Wait for images (training data) to load before continuing
-trainingData.images[trainingData.images.length - 1].onload = function () {
+const paths = [
+	trainingData,
+	testingData
+];
+const numImages = [
+	numTrainingImages,
+	numTestingImages
+];
+
+// Add training data to trainingData.images array as an HTML image element
+// Loop through each training image
+
+for (var i = 0; i < numImages[i]; i ++) {
+	for (var j = 0; j < numImages[i]; j ++) {
+		// Create a new HTML image element with the specified dimensions and set current array index to this element (array.push does not work here)
+		paths[i].images[j] = new Image(imageSize, imageSize);
+	}
+}
+
+// Wait for images (testing data) to load before continuing
+testingData.images[testingData.images.length - 1].onload = function () {
 	// Create training data from pixels of image elements
 	// Create a new variable to store the data
 	var pixels;
 	// Loop through each training image
-	for (var i = 0; i < numTrainingImages; i ++) {
-		// Create a tensor with 3 (RGB) color channels from the image element
-		pixels = tf.fromPixels(trainingData.images[i], 3);
-		// Resize image to the specified dimensions with resizeBilinear()
-		pixels = tf.image.resizeBilinear(pixels, [imageSize, imageSize]);
-		// Get the values array from the pixels tensor
-		pixels = pixels.dataSync();
-		// Add new array to trainingData.pixels to store the pixel values for the image
-		trainingData.pixels.push([]);
-		// Loop through each value in the pixels array
-		// The whole pixels array is not pushed on at once because the array format will be incompatible
-		pixels.forEach(
-			// Add color value to the corresponding image's trainingData.pixels array
-			(element) => trainingData.pixels[i].push(element)
-		);
+
+	for (var i = 0; i < paths.length; i ++) {
+		for (var j = 0; j < numImages[i]; j ++) {
+			// Create a tensor with 3 (RGB) color channels from the image element
+			pixels = tf.fromPixels(paths[i].images[j], 3);
+			// Resize image to the specified dimensions with resizeBilinear()
+			pixels = tf.image.resizeBilinear(pixels, [imageSize, imageSize]);
+			// Get the values array from the pixels tensor
+			pixels = pixels.dataSync();
+			// Add new array to trainingData.pixels to store the pixel values for the image
+			paths[i].pixels.push([]);
+			// Loop through each value in the pixels array
+			// The whole pixels array is not pushed on at once because the array format will be incompatible
+			pixels.forEach(
+				// Add color value to the corresponding image's trainingData.pixels array
+				(element) => paths[i].pixels[j].push(element)
+			);
+		}
 	}
 	// Create a tensor from the pixel values of the training data and store it in trainingData.tensor.input
 	trainingData.tensor.input = tf.tensor(trainingData.pixels);
+	// Create a tensor from the pixel values of the testing data and store it in testingData.tensor.input
+	testingData.tensor.input = tf.tensor(testingData.pixels);
 
 	const imageLabels = [];
 	// var labels = tf.ones([10]).dataSync();
@@ -202,10 +230,10 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	trainingData.tensor.output = tf.oneHot(tf.tensor1d(imageLabels, "int32"), 2, 1, -1);
 	trainingData.tensor.output.dtype = "float32";
 
-	// Pick a random image from the training data to test the network on
-	var index = Math.floor(Math.random() * trainingData.pixels.length);
+	// Pick a random image from the testing data set to test the network on
+	var index = Math.floor(Math.random() * testingData.pixels.length);
 	// Create image tensor from input image pixel data
-	const input = tf.tensor(trainingData.pixels[index], [imageSize, imageSize, 3]);
+	const input = tf.tensor(testingData.pixels[index], [imageSize, imageSize, 3]);
 	// Set input image tensor dtype to "int32"
 	input.dtype = "int32";
 	// Display input image on the input canvas, then dispose of the input tensor
@@ -254,7 +282,7 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 					.mul(pixelMul)
 				)
 				// Reduce output values from ~ 0 - 255 to ~ 0 - 1
-				.mul(pixelMul)
+				// .mul(pixelMul)
 				// Clip pixel values to a 0 - 1 (float32) range
 				.clipByValue(0, 1)
 				// Reshape the output tensor into an image format (W * L * 3)
@@ -275,4 +303,8 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 for (var i = 0; i < numTrainingImages; i ++) {
 	// Set the corresponding source for the image
 	trainingData.images[i].src = "./training-data/" + (i + 1) + ".jpg";
+}
+for (var i = 0; i < numTestingImages; i ++) {
+	// Set the corresponding source for the image
+	testingData.images[i].src = "./testing-data/" + (i + 1) + ".jpg";
 }
