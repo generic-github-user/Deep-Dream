@@ -215,8 +215,8 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		return tf.tensor(values, [imageSize, imageSize, 3], "int32");
 	}
 
-	// Define training function for class-matching neural network - this will be executed iteratively
-	function train() {
+	console.log("Begin classifier network training");
+	for (var i = 0; i < 10; i ++) {
 		// Print TensorFlow.js memory information to console, including the number of tensors stored in memory (for debugging purposes)
 		console.log(tf.memory());
 		// Use tidy here
@@ -230,7 +230,11 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 
 		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
 		optimizer.minimize(calculateLoss);
+	}
+	console.log("End classifier network training");
 
+	// Define training function for class-matching neural network - this will be executed iteratively
+	function train() {
 		// All this is just display code
 		// Calculate autoencoder output from original image
 		const output =
@@ -238,16 +242,13 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		tf.tidy(
 			() => {
 				// Decode the low-dimensional representation of the input data created by the encoder
-				return decoder.model.predict(
-					// Create an encoded (low-dimensional) representation of the input data
-					encoder.model.predict(
-						// Create a tensor from the array of pixel values for the randomly selected input image
-						tf.tensor(
-							[trainingData.pixels[index]]
-						)
-						// Multiply the input data tensor by the pixel coefficient
-						.mul(pixelMul)
+				return dreamer.model.predict(
+					// Create a tensor from the array of pixel values for the randomly selected input image
+					tf.tensor(
+						[trainingData.pixels[index]]
 					)
+					// Multiply the input data tensor by the pixel coefficient
+					.mul(pixelMul)
 				)
 				// Reduce output values from ~ 0 - 255 to ~ 0 - 1
 				.mul(pixelMul)
