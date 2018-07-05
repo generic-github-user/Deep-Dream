@@ -4,8 +4,8 @@
 // Size of input and output images in pixels (width and height)
 const imageSize = 16;
 // Number of images to use when training the neural network
-const numTrainingImages = 10;
-const classTargets = tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1);
+const numTrainingImages = 20;
+const classTargets = tf.oneHot(tf.tensor1d(tf.ones([20]).dataSync(), "int32"), 2, 1, -1);
 
 // Automatically generated settings and parameters
 // Volume of image data, calculated by squaring imageSize to find the area of the image (total number of pixels) and multiplying by three for each color channel (RGB)
@@ -191,7 +191,15 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	// Create a tensor from the pixel values of the training data and store it in trainingData.tensor.input
 	trainingData.tensor.input = tf.tensor(trainingData.pixels);
 
-	trainingData.tensor.output = tf.oneHot(tf.tensor1d(tf.ones([10]).dataSync(), "int32"), 2, 1, -1);
+	const imageLabels = [];
+	// var labels = tf.ones([10]).dataSync();
+	for (var i = 0; i < 10; i ++) {
+		imageLabels.push(0);
+	}
+	for (var i = 0; i < 10; i ++) {
+		imageLabels.push(1);
+	}
+	trainingData.tensor.output = tf.oneHot(tf.tensor1d(imageLabels, "int32"), 2, 1, -1);
 	trainingData.tensor.output.dtype = "float32";
 
 	// Pick a random image from the training data to test the network on
@@ -217,7 +225,7 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 	}
 
 	console.log("Begin classifier network training");
-	for (var i = 0; i < 10; i ++) {
+	for (var i = 0; i < 100; i ++) {
 		printLoss(classifier);
 		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
 		optimizer.minimize(classifier.calculateLoss);
@@ -266,5 +274,5 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 // Loop through each image element
 for (var i = 0; i < numTrainingImages; i ++) {
 	// Set the corresponding source for the image
-	trainingData.images[i].src = "./training-data/fireworks/" + (i + 1) + ".jpg";
+	trainingData.images[i].src = "./training-data/" + (i + 1) + ".jpg";
 }
