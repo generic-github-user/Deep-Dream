@@ -148,7 +148,6 @@ const learningRate = 0.001;
 // Optimization function for training neural networks
 optimizer = tf.train.adam(learningRate);
 
-
 // Create object to store training data in image, pixel, and tensor format
 const trainingData = {
 	// Store training data as HTML image elements
@@ -223,28 +222,29 @@ trainingData.images[trainingData.images.length - 1].onload = function () {
 		return tf.tensor(values, [imageSize, imageSize, 3], "int32");
 	}
 
-	console.log("Begin classifier network training");
-	for (var i = 0; i < 10; i ++) {
+	function printLoss(model) {
 		// Print TensorFlow.js memory information to console, including the number of tensors stored in memory (for debugging purposes)
 		console.log(tf.memory());
 		// Use tidy here
 		// Print current neural network loss to console
 		// Calculate loss value and store it in a constant
-		const printLoss = classifier.calculateLoss();
+		const currentLoss = model.calculateLoss();
 		// Print loss to console
-		printLoss.print();
+		currentLoss.print();
 		// Dispose of loss value
-		printLoss.dispose();
+		currentLoss.dispose();
+	}
 
+	console.log("Begin classifier network training");
+	for (var i = 0; i < 10; i ++) {
 		// Minimize the error/cost calculated by the loss calculation funcion using the optimization function
 		optimizer.minimize(classifier.calculateLoss);
+		printLoss(classifier);
 	}
 	console.log("End classifier network training");
 
 	// Define training function for class-matching neural network - this will be executed iteratively
 	function train() {
-
-
 		// All this is just display code
 		// Calculate autoencoder output from original image
 		const output =
